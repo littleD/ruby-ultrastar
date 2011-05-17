@@ -1,0 +1,112 @@
+body {
+	font-family: 'Luxi sans';
+	background-color:#444;
+	padding-top:50px;
+}
+div {
+	padding:3px 7px;
+	margin:3px;
+}
+body > div.unavalible {
+	color:#999;
+	background-color:#333;
+	border-left:5px solid #B7B86E;
+	border-top:1px solid #222;
+	border-bottom:1px solid #777;
+
+}
+.song  {
+	padding-left:15px;
+	padding-bottom:7px;
+	border-top:1px solid #999;
+	border-bottom:1px solid #333;
+	background-image:url("images/top-grad.png");
+	background-repeat:repeat-x;
+	color:#ccc;
+	background-color:#555;
+	font-size: 13px;
+	letter-spacing:0.05em;
+	border-left:5px solid #fce94f;
+	overflow:auto;
+}
+.search {
+	max-height:150px;
+	overflow-y:scroll;
+}
+.categories {
+float:left;
+}
+.categories input {
+padding:3px 5px;
+}
+.categories span {
+display:block;
+}
+.categories img {
+float:left;
+margin-right: 5px;
+vertical-align:center;
+}
+.search a{
+color: #fce94f;
+text-decoration:none;
+
+}
+.song > span {
+/*	margin-left:5px;*/
+}
+object {
+	float:left;
+	margin-left:-999px;
+}
+form,input {
+padding:0;
+margin:0;
+}
+.lyrics {
+clear:both;
+margin-top:8px;
+background-color:#444;
+border-top:1px solid #333;
+border-left:1px solid #333;
+border-right:1px solid #333;
+
+border-bottom:1px solid #666;
+	font-family:Luxi Sans;
+	font-size:19px;
+	text-align:center;
+	max-height:80px;
+	overflow-y:hidden;
+}
+form{display:inline}
+.lyrics span, form {
+padding:0;
+margin:0;
+}
+.song pre{
+	padding:3px 7px;
+	background-color:#222;
+	overflow-y:scroll;
+	max-height:150px;
+}
+.song > h1 {
+
+	color:#ddd;
+	font-weight:normal;
+	font-size: 17px;
+	margin:0 0 5px 0;
+	padding:0 0 0;
+/*	display:inline;*/
+}
+button {
+color :#fce94f;
+background-color:#444;
+border-top:1px solid #999;
+
+float:right;
+font-size:10px;
+}
+/*.song object {display:none}*/
+/*.song a {display:none}*/
+/*.song pre {display:none}*/
+/*.song .lyrics {display:none}*/

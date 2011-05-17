@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html>
+<head>
+<link href="/stylesheet.css" media="screen" rel="stylesheet" type="text/css" />
+<script type="text/javascript" src="/js/jquery-1.4.4.min.js"></script> 
+<script type="text/javascript" src="/js/karaoke.js"></script> 
+<script type="text/javascript" language="javascript" src="/js/niftyplayer.js"></script>
+</head>
+<body>
+<% @songdirs.each {|songdir| %>
+	<%= songdir.songs_recursive %>	
+<% } %>
+</body>

@@ -1,0 +1,5 @@
+<% i = 0 %>
+<% @result.each do |url|%>
+<p><a href="<%= url.attribute("href") %>"><%= @title[i].content %></a></p>
+<% i += 1 %>
+<% end %>
