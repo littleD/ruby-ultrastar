@@ -1,12 +1,28 @@
+module Problem
+  ConfigNotFound = 0
+	ConfigNoArtist = 1
+	ConfigNoTitle = 2
+	ConfigNoMP3 = 3
+	ConfigNoMP3File = 4
+  def self.name(problem)
+		return "Config Not Found" if problem == ConfigNotFound
+		return "Config: No Artist" if problem == ConfigNoArtist
+		return "Config: No Title" if problem == ConfigNoTitle
+		return "Config: No MP3" if problem == ConfigNoMP3
+		return "Config: No MP3 File" if problem == ConfigNoMP3File
+		return "You've gotta problem with problem"
+  end
+end
+
 class SongDir
 	attr_accessor :subdir, :file, :path, :root_dir
 
 	def self.type(path)
 		if Dir.glob("#{path}/**.txt") != []
-			return "song"
+			return :song
 #			@txt = File.open(config[0]).read
 		end
-		return "container"
+		return :container
 	end
 
 	def initialize(path,root_dir)
@@ -24,7 +40,7 @@ class SongDir
 			short = "#{path}/#{entry}"
 			long = "#{self.path_abs}/#{entry}"
 			if File.directory?(long)
-				if SongDir.type(long) == "song"
+				if SongDir.type(long) == :song
 					@file += [Song.new(short,root_dir)]
 				else
 					@subdir += [SongDir.new(short,root_dir)]
@@ -58,27 +74,27 @@ end
 class Song
 	attr_accessor :txt, :path, :title, :config,:bpm_file
 
-	def self.player(mp3)
-		id = rand(10000)
-		return "<object classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" codebase=\"http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0\" width=\"0\" height=\"0\" id=\"niftyPlayer#{id}\" align=\"\">
-		 <param name=movie value=\"swf/niftyplayer.swf?file=#{mp3}&as=0\">
-		 <param name=quality value=high>
-		 <param name=bgcolor value=#FFFFFF>
-		 <embed src=\"swf/niftyplayer.swf?file=#{mp3}&as=0\" quality=high bgcolor=#FFFFFF width=\"0\" height=\"0\" name=\"niftyPlayer#{id}\" align=\"\" type=\"application/x-shockwave-flash\" swLiveConnect=\"true\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\">
-		</embed>
-		</object>"
-	end
-
 	def initialize(path,root_dir)
 		@path = path
 		@root_dir = root_dir
+		@problems = []
 		if (config = Dir.glob("#{self.path_abs}/**.txt")) != []
 			@txt = File.open(config[0]).read
+		else
+			@problems += [Problem::ConfigNotFound]
 		end
 		@config = {}
 		@txt.scan(/#([A-Z0-9]*):(.*)/) {
 			@config[$1] = $2
 		}
+		check_config
+	end
+
+	def check_config 
+		@problems += [Problem::ConfigNoArtist] if @config['ARTIST'].nil?
+		@problems += [Problem::ConfigNoTitle] if @config['TITLE'].nil?
+		@problems += [Problem::ConfigNoMP3] if @config['MP3'].nil?
+		@problems += [Problem::ConfigNoMP3File] if Dir.glob("#{self.path_abs}/#{@config['MP3']}") == []
 	end
 
 	def path_abs
@@ -87,6 +103,44 @@ class Song
 
 	def categories
 		@path.split("/")[1..-2].join " "
+	end
+
+	def artist_title
+		return "[#{@path}]" if @problems.include? Problem::ConfigNoArtist or @problems.include? Problem::ConfigNoTitle
+		return "#{@config['ARTIST'].strip} - #{@config['TITLE'].strip}"
+	end
+
+	def prettier_config
+		out = ""
+		@config.each{|key, value|
+			out+= "#{key} : #{value}"
+		}
+		out
+	end
+
+	def to_html
+		out = ""
+		if @config['MP3'].nil?
+			out =  "<div class=\"unavalible\"><p>#{path} - brak pliku</p></div>" 
+		else		
+			out = 
+	"
+	<div><p><img class=\"ico\" src=\"icons\\microphone.png\">#{artist_title}</p></div>"
+		end
+		out
+	end
+	def mp3_path
+		return "#{self.path_abs}/#{@config['MP3']}"
+	end
+	def to_s
+		out = "#{artist_title}"
+
+		out += "\n#{mp3_path}"
+		out += "\n"+File.exists?(mp3_path).to_s
+		@problems.each{ |problem| 
+			out +="\n\t#{Problem.name(problem)}"
+		} if @problems != []
+		out
 	end
 
 	def lyrics
@@ -123,38 +177,17 @@ class Song
 		return out
 	end
 
-	def artist_title
-		return "#{@config['ARTIST'].strip} - #{@config['TITLE'].strip}"
-	end
-	def prettier_config
-		out = ""
-		@config.each{|key, value|
-			out+= "#{key} : #{value}"
-		}
-		out
-	end
-
-	def to_html
-		out = ""
-		if @config['MP3'].nil?
-			out =  "<div class=\"unavalible\"><p>#{path} - brak pliku</p></div>" 
-		else		
-			out = 
-	"
-	<div><p><img class=\"ico\" src=\"icons\\microphone.png\">#{artist_title}</p></div>"
-		end
-		out
+	def self.player(mp3)
+		id = rand(10000)
+		return "<object classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" codebase=\"http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0\" width=\"0\" height=\"0\" id=\"niftyPlayer#{id}\" align=\"\">
+		 <param name=movie value=\"swf/niftyplayer.swf?file=#{mp3}&as=0\">
+		 <param name=quality value=high>
+		 <param name=bgcolor value=#FFFFFF>
+		 <embed src=\"swf/niftyplayer.swf?file=#{mp3}&as=0\" quality=high bgcolor=#FFFFFF width=\"0\" height=\"0\" name=\"niftyPlayer#{id}\" align=\"\" type=\"application/x-shockwave-flash\" swLiveConnect=\"true\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\">
+		</embed>
+		</object>"
 	end
 
-	def to_s
-		out = ""
-		if @config['MP3'].nil?
-			out =  "[!ERROR] #{path}" 
-		else		
-			out = "#{artist_title}"
-		end
-		out
-	end
 
 # Wersja z playerem
 #	def to_s
