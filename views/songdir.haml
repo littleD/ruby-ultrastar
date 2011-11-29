@@ -1,0 +1,15 @@
+%div.dir
+	%p= songdir.path
+	%button.unhide Unhide
+	%div.subdirs 
+		%p subdirs 
+		- songdir.subdirs.each {|subdir| 
+		= "#{subdir.to_html}"
+		- } if not songdir.subdirs.nil?
+	%div.songs
+
+		%p songs
+		- songdir.songs.each {|song| 
+		= song.to_html
+		- } if not songdir.songs.nil?
+

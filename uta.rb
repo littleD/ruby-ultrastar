@@ -1,6 +1,7 @@
 require 'sinatra'
 require 'shotgun'
 require 'yaml'
+require 'haml'
 require 'lib.rb'
 require 'open-uri'
 require 'nokogiri'
@@ -15,7 +16,7 @@ get '/' do
 		songdirs += [SongDir.new("",dir)]
 	}
 	@songdirs = songdirs
-	erb :index
+	haml :index
 end
 
 post'/' do
@@ -33,7 +34,4 @@ post'/s' do
 	erb :search
 end
 
-get '/jquery.js' do
-	File.open('js/jquery-1.4.4.min.js', 'r').read
-end
 

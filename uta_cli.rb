@@ -1,10 +1,13 @@
 #!/usr/bin/env ruby
 $KCODE = 'UTF8' 
 
+require 'yaml'
 require 'lib.rb'
 require 'htmlview.rb'
 
-sd = SongDir.new("","/media/Kuroneko/UltraStar Deluxe/Songs/")
+config = YAML::load(File.open('config.yaml', 'r').read)
+dir = config[:dirs][0]                                         #TODO - only first dir
+sd = SongDir.new("", dir )
 
 case ARGV[0] 
 when "html"

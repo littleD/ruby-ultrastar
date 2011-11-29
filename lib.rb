@@ -15,7 +15,7 @@ module Problem
 end
 
 class SongDir
-	attr_accessor :subdir, :file, :path, :root_dir
+	attr_accessor :subdirs, :songs, :path, :root_dir
 
 	def self.type(path)
 		if Dir.glob("#{path}/**.txt") != []
@@ -28,8 +28,8 @@ class SongDir
 	def initialize(path,root_dir)
 		@root_dir = root_dir
 		@path = path
-		@subdir = []
-		@file = []
+		@subdirs = []
+		@songs = []
 		recursive_scan
 	end
 
@@ -41,9 +41,9 @@ class SongDir
 			long = "#{self.path_abs}/#{entry}"
 			if File.directory?(long)
 				if SongDir.type(long) == :song
-					@file += [Song.new(short,root_dir)]
+					@songs += [Song.new(short,root_dir)]
 				else
-					@subdir += [SongDir.new(short,root_dir)]
+					@subdirs += [SongDir.new(short,root_dir)]
 				end
 			end
 		end
@@ -54,25 +54,20 @@ class SongDir
 	end
 
 	def songs_recursive
-		out = @file
-		@subdir.each { |dir|
+		out = @songs
+		@subdirs.each { |dir|
 			out += dir.songs_recursive 
 		}
 		return out
 	end
 
 	def to_html
-		return "
-<div class=\"container\">
-	<h1><img class=\"ico\" src=\""+(subdir == [] ? 'icons\folder_closed.png' : 'icons\folder_download_closed.png' ) +
-"\">#{path}</h1> <div class=\"content\">#{subdir.join(' ')}</div>"+
-	(@file ==[] ? "" : "<div class=\"song\"> #{@file.join("")}</div>")+
-	" </div>"
+    Haml::Engine.new(File.open("views/songdir.haml").read).render '', :songdir => self.clone
 	end
 end
 
 class Song
-	attr_accessor :txt, :path, :title, :config,:bpm_file,:problems
+	attr_accessor :txt, :path, :title, :config, :bpm_file, :problems, :artist
 
 	def initialize(path,root_dir)
 		@path = path
@@ -105,6 +100,14 @@ class Song
 		@path.split("/")[1..-2].join " "
 	end
 
+	def artist 
+		@config['ARTIST']
+	end
+
+	def title
+		@config['TITLE']
+	end
+
 	def artist_title
 		return "[#{@path}]" if @problems.include? Problem::ConfigNoArtist or @problems.include? Problem::ConfigNoTitle
 		return "#{@config['ARTIST'].strip} - #{@config['TITLE'].strip} [#{@path}]"
@@ -119,19 +122,13 @@ class Song
 	end
 
 	def to_html
-		out = ""
-		if @config['MP3'].nil?
-			out =  "<div class=\"unavalible\"><p>#{path} - brak pliku</p></div>" 
-		else		
-			out = 
-	"
-	<div><p><img class=\"ico\" src=\"icons\\microphone.png\">#{artist_title}</p></div>"
-		end
-		out
+    Haml::Engine.new(File.open("views/song.haml").read).render '', :song => self.clone
 	end
+
 	def mp3_path
 		return "#{self.path_abs}/#{@config['MP3']}"
 	end
+
 	def to_s
 		out = "#{artist_title}"
 		@problems.each{ |problem| 
@@ -174,51 +171,4 @@ class Song
 		}
 		return out
 	end
-
-	def self.player(mp3)
-		id = rand(10000)
-		return "<object classid=\"clsid:D27CDB6E-AE6D-11cf-96B8-444553540000\" codebase=\"http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0\" width=\"0\" height=\"0\" id=\"niftyPlayer#{id}\" align=\"\">
-		 <param name=movie value=\"swf/niftyplayer.swf?file=#{mp3}&as=0\">
-		 <param name=quality value=high>
-		 <param name=bgcolor value=#FFFFFF>
-		 <embed src=\"swf/niftyplayer.swf?file=#{mp3}&as=0\" quality=high bgcolor=#FFFFFF width=\"0\" height=\"0\" name=\"niftyPlayer#{id}\" align=\"\" type=\"application/x-shockwave-flash\" swLiveConnect=\"true\" pluginspage=\"http://www.macromedia.com/go/getflashplayer\">
-		</embed>
-		</object>"
-	end
-
-
-# Wersja z playerem
-#	def to_s
-#		out = ""
-#		if @config['MP3'].nil?
-#			out =  "<div class=\"unavalible\"><p>#{path} - brak pliku</p></div>" 
-#		else		
-#			out = 
-#	"<div class=\"song\">
-#	<h1>#{artist_title}</h1>
-#	#{Song.player(path_abs[1..-1].gsub(/\/public\//,"/")+'/'+@config['MP3'][0..-2])}
-#	<div class=\"categories\">
-#	<img src=\"/images/icons/folder_edit.png\" />
-#	<span>#{self.categories}</span>
-#	<form name=\"song\" action=\".\" method=\"post\">
-#	<input type=\"hidden\" name=\"path\" value=\"#{@root_dir}\"/>
-#	<input type=\"hidden\" name=\"old_path\" value=\"#{path_abs}\"/>
-#	<input type=\"text\" name=\"categories\" value=\"#{self.categories}\"/>
-#	</form>
-#	</div>
-#	"+
-##	<p><button class=\"settings\">Settings</button><input type="text" name="gap"/><input type="text" name=""/></p>
-#	"<div class=\"debug\">
-#		<a href=\"#{path_abs.gsub(/\/public\//,"/")}/#{@config['MP3']}\">song</a>
-#		<pre>#{self.prettier_config}</pre>
-#	</div>\n"+
-## "<pre>#{@txt}</pre>"+
-#	"<button class=\"play\">Play</button>
-#	<input type=\"hidden\" name=\"q\" value=\"#{artist_title}\"/>
-#	<button type=\"submit\" class=\"search\">Search</button>
-#	<button class=\"b_debug\">Debug</button>
-#	<div class=\"lyrics\">#{self.lyrics}</div>\n</div>\n" 
-#		end
-#		out
-#	end
 end
