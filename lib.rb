@@ -72,7 +72,7 @@ class SongDir
 end
 
 class Song
-	attr_accessor :txt, :path, :title, :config,:bpm_file
+	attr_accessor :txt, :path, :title, :config,:bpm_file,:problems
 
 	def initialize(path,root_dir)
 		@path = path
@@ -84,12 +84,12 @@ class Song
 			@problems += [Problem::ConfigNotFound]
 		end
 		@config = {}
-		@txt.scan(/#([A-Z0-9]*):(.*)/) {
+		@txt.scan(/#([A-Z0-9]*):(.*)\r/) {
 			@config[$1] = $2
 		}
 		check_config
 	end
-
+	
 	def check_config 
 		@problems += [Problem::ConfigNoArtist] if @config['ARTIST'].nil?
 		@problems += [Problem::ConfigNoTitle] if @config['TITLE'].nil?
@@ -107,7 +107,7 @@ class Song
 
 	def artist_title
 		return "[#{@path}]" if @problems.include? Problem::ConfigNoArtist or @problems.include? Problem::ConfigNoTitle
-		return "#{@config['ARTIST'].strip} - #{@config['TITLE'].strip}"
+		return "#{@config['ARTIST'].strip} - #{@config['TITLE'].strip} [#{@path}]"
 	end
 
 	def prettier_config
@@ -134,12 +134,10 @@ class Song
 	end
 	def to_s
 		out = "#{artist_title}"
-
-		out += "\n#{mp3_path}"
-		out += "\n"+File.exists?(mp3_path).to_s
 		@problems.each{ |problem| 
 			out +="\n\t#{Problem.name(problem)}"
-		} if @problems != []
+			out += "\n\t:#{@config['MP3']}"	if problem == Problem::ConfigNoMP3File 
+		} if not @problems.empty?
 		out
 	end
 
